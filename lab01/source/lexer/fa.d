@@ -17,7 +17,6 @@ struct FAState
     static Transition* createTransition(FAState* source, FAState* dest,
         bool epsilon, char symbol = cast(char)0)
     {
-        assert(!source.fin);
         auto t = new Transition(source, dest, epsilon, symbol);
         source.out_transitions ~= t;
         dest.in_transitions ~= t;
@@ -117,18 +116,27 @@ void writeDotFile(const(FiniteAutomata)* fa, string fname = "automata.dot")
     auto f = File(fname, "w");
     f.writeln("digraph {");
     f.writeln("\trankdir=LR;");
+
+    string stateName(const(FAState)* state)
+    {
+        string state_name = state.id.to!string;
+        if (fa.initial_state == state)
+            state_name = "initial_" ~ state_name;
+        if (state.fin)
+            state_name = "final_" ~ state_name;
+        return state_name;
+    }
+
     foreach (state; fa.states)
     {
-        string state_name = (fa.initial_state == state) ?
-            "initial_" ~ state.id.to!string :
-            state.id.to!string;
+        string source_name = stateName(state);
         foreach (t; state.out_transitions)
         {
-            string dest_name = t.dest.fin ? "final_" ~ t.dest.id.to!string : t.dest.id.to!string;
+            string dest_name = stateName(t.dest);
             string label = "ε";
             if (!t.epsilon)
                 label = [t.symbol];
-            f.writeln('\t', state_name, " -> ", dest_name, " [label=", label, "];");
+            f.writeln('\t', source_name, " -> ", dest_name, " [label=", label, "];");
         }
     }
     f.writeln("}");
