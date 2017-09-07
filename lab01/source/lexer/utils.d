@@ -1,5 +1,8 @@
 module lab01.utils;
 
+import std.algorithm;
+import std.range;
+
 
 ElType[] remove_one(ElType)(ElType[] r, ElType el)
 {
@@ -11,4 +14,81 @@ ElType[] remove_one(ElType)(ElType[] r, ElType el)
             return r[0 .. $-1];
         }
     return r;
+}
+
+auto flatten(RoR)(RoR ror)
+    if (isInputRange!RoR)
+{
+    struct FlatChainResult
+    {
+        alias SubRT = typeof(ror.front());
+
+        RoR ror;
+        SubRT r;
+        bool m_empty = false;
+
+        this(RoR ror, SubRT r, bool m_empty)
+        {
+            this.ror = ror;
+            this.r = r;
+            this.m_empty = m_empty;
+        }
+
+        this(RoR ror)
+        {
+            this.ror = ror;
+            while (!ror.empty && ror.front.empty)
+                ror.popFront();
+            if (!ror.empty)
+            {
+                r = ror.front;
+                m_empty = false;
+            }
+            else
+                m_empty = true;
+        }
+
+        auto front()
+        {
+            assert(!m_empty);
+            return r.front();
+        }
+
+        void popFront()
+        {
+            assert(!m_empty);
+            if (!r.empty)
+                r.popFront();
+            if (r.empty)
+            {
+                ror.popFront();
+                while (!ror.empty && ror.front.empty)
+                    ror.popFront();
+                if (ror.empty)
+                    m_empty = true;
+                else
+                    r = ror.front();
+            }
+        }
+
+        bool empty()
+        {
+            return m_empty;
+        }
+
+        typeof(this) save()
+        {
+            return FlatChainResult(ror, r, m_empty);
+        }
+    }
+    return FlatChainResult(ror);
+}
+
+
+unittest
+{
+    int[] a = [1, 2, 3];
+    int[] b = [4, 5];
+    auto res = flatten([a, b]);
+    assert(equal(res, [1, 2, 3, 4, 5]));
 }

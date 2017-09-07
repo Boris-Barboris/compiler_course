@@ -9,7 +9,7 @@ import lab01.utils;
 
 struct FAState
 {
-    int id;         // numerical id
+    string id;         // numerical id
     bool fin;       // it this state final
     Transition*[] out_transitions;
     Transition*[] in_transitions;
@@ -61,7 +61,7 @@ struct FiniteAutomata
 
     FAState* addState(bool initial = false, bool fin = false)
     {
-        auto state = new FAState(id_counter++, fin);
+        auto state = new FAState((id_counter++).to!string, fin);
         //writeln("Created state ", *state);
         if (initial)
         {
@@ -119,7 +119,7 @@ void writeDotFile(const(FiniteAutomata)* fa, string fname = "automata.dot")
 
     string stateName(const(FAState)* state)
     {
-        string state_name = state.id.to!string;
+        string state_name = state.id;
         if (fa.initial_state == state)
             state_name = "initial_" ~ state_name;
         if (state.fin)
