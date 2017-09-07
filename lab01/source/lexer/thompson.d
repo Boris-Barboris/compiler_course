@@ -61,8 +61,8 @@ FiniteAutomata* recursThompson(RegexTreeEl* regHead)
 private FiniteAutomata* emptyRegexp()
 {
     FiniteAutomata* fa = new FiniteAutomata();
-    auto start = fa.addState(true, false);
-    auto finish = fa.addState(false, true);
+    auto start = fa.addNewState(true, false);
+    auto finish = fa.addNewState(false, true);
     FAState.createTransition(start, finish, true);
     return fa;
 }
@@ -72,8 +72,8 @@ import std.format;
 private FiniteAutomata* trivialRegexp(char c)
 {
     FiniteAutomata* fa = new FiniteAutomata();
-    auto start = fa.addState(true, false);
-    auto finish = fa.addState(false, true);
+    auto start = fa.addNewState(true, false);
+    auto finish = fa.addNewState(false, true);
     auto t = FAState.createTransition(start, finish, false, c);
     //writeln("Transition for trivial regexp: %d %d %d %c".format(t.source.id, t.dest.id, t.epsilon, t.symbol));
     return fa;
@@ -84,7 +84,7 @@ FiniteAutomata* orRegexp(FiniteAutomata* left, FiniteAutomata* right)
     if (left == null || right == null)
         throw new Exception("cannot apply | to empty regexp");
     FiniteAutomata* fa = new FiniteAutomata();
-    auto start = fa.addState(true, false);
+    auto start = fa.addNewState(true, false);
     FAState.createTransition(start, left.initial_state, true);
     FAState.createTransition(start, right.initial_state, true);
     assert(left.fin_state);
@@ -130,8 +130,8 @@ private FiniteAutomata* kleeneStar(FiniteAutomata* sub)
     FiniteAutomata* fa = new FiniteAutomata();
     assert(sub.fin_state);
     assert(sub.initial_state);
-    auto start = fa.addState(true, false);
-    auto finish = fa.addState(false, true);
+    auto start = fa.addNewState(true, false);
+    auto finish = fa.addNewState(false, true);
     fa.states ~= sub.states;
     sub.fin_state.fin = false;
     FAState.createTransition(start, finish, true);

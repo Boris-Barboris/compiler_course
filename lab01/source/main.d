@@ -16,6 +16,10 @@ int main(string[] args)
     string regexp = args[1];
     auto nfa = thompsonConstruction(regexp);
     writeDotFile(nfa, "nfa.dot");
-    writeln("NFA constructed and written to nfs.dot");
+    writeln("NFA constructed and written to nfa.dot");
+    writeln("Running powerset construction...");
+    auto dfa = powersetConstruction(nfa);
+    writeDotFile(dfa, "dfa.dot");
+    writeln("DFA constructed and written to dfa.dot");
     return 0;
 }

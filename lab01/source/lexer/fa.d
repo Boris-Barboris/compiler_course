@@ -59,7 +59,7 @@ struct FiniteAutomata
     FAState* initial_state;
     FAState* fin_state;     // ok for regexp-derived automatons
 
-    FAState* addState(bool initial = false, bool fin = false)
+    FAState* addNewState(bool initial = false, bool fin = false)
     {
         auto state = new FAState((id_counter++).to!string, fin);
         //writeln("Created state ", *state);
@@ -75,6 +75,15 @@ struct FiniteAutomata
         }
         states ~= state;
         return state;
+    }
+
+    void addState(FAState* st, bool initial = false)
+    {
+        states ~= st;
+        if (initial)
+            initial_state = st;
+        if (st.fin && !fin_state)
+            fin_state = st;
     }
 
     bool verifyAsDeterministic(string input)
@@ -136,7 +145,7 @@ void writeDotFile(const(FiniteAutomata)* fa, string fname = "automata.dot")
             string label = "ε";
             if (!t.epsilon)
                 label = [t.symbol];
-            f.writeln('\t', source_name, " -> ", dest_name, " [label=", label, "];");
+            f.writeln('\t', '"', source_name, "\" -> \"", dest_name, "\" [label=", label, "];");
         }
     }
     f.writeln("}");
