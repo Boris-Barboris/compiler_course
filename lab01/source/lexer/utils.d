@@ -92,3 +92,16 @@ unittest
     auto res = flatten([a, b]);
     assert(equal(res, [1, 2, 3, 4, 5]));
 }
+
+
+import std.digest.murmurhash;
+
+// get hash of the range of elements, usefull to compare ordered arrays of pointers
+int sethash(SetElTR)(SetElTR setrange)
+{
+    MurmurHash3!32 hasher;
+    foreach (el; setrange)
+        hasher.put(*(cast(ubyte[size_t.sizeof]*) &el));
+    ubyte[4] fin = hasher.finish();
+    return *(cast(int*) &fin);
+}

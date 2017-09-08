@@ -2,7 +2,6 @@ module lab01.powerset;
 
 import std.algorithm;
 import std.array: array;
-import std.digest.murmurhash;
 import std.conv: to;
 import std.stdio;
 import std.string;
@@ -50,7 +49,7 @@ FiniteAutomata* powersetConstruction(FiniteAutomata* nfa)
         foreach (ref ss; superstates.byValue.filter!(a => !a.marked))
         {
             writeln("Processing superstate ", ss.resultState.id);
-            // find array of symbols that that lead out of this superstate
+            // find array of symbols that lead out of this superstate
             Transition*[] transitions = ss.val.states.map!(a => a.out_transitions).
                 flatten.filter!(a => !a.epsilon).array;
             writeln("Found ", transitions.length, " non-epsilon transitions");
@@ -93,16 +92,6 @@ FiniteAutomata* powersetConstruction(FiniteAutomata* nfa)
     res.initial_state = start_state.resultState;
 
     return res;
-}
-
-// get hash of the range of elements, usefull to compare ordered arrays of pointers
-int sethash(SetElTR)(SetElTR setrange)
-{
-    MurmurHash3!32 hasher;
-    foreach (el; setrange)
-        hasher.put(*(cast(ubyte[size_t.sizeof]*) &el));
-    ubyte[4] fin = hasher.finish();
-    return *(cast(int*) &fin);
 }
 
 // superstate wich is actually a subset of all states of NFA

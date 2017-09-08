@@ -3,6 +3,7 @@ import std.stdio;
 import lab01.fa;
 import lab01.thompson;
 import lab01.powerset;
+import lab01.minimization;
 
 
 int main(string[] args)
@@ -21,5 +22,25 @@ int main(string[] args)
     auto dfa = powersetConstruction(nfa);
     writeDotFile(dfa, "dfa.dot");
     writeln("DFA constructed and written to dfa.dot");
-    return 0;
+    auto dfa_min = minimizeDfa(dfa);
+    writeDotFile(dfa_min, "dfa_min.dot");
+    writeln("DFA minimized and written to dfa_min.dot");
+    while (true)
+    {
+        writeln("Enter the string to test:");
+        string input = readln();
+        writeln("modeling input '", input, "'");
+        try
+        {
+            bool accepted = dfa_min.verifyAsDeterministic(input[0..$-1]);
+            if (accepted)
+                writeln("string ACCEPTED by DFA");
+            else
+                writeln("string REJECTED by DFA");
+        }
+        catch (Exception e)
+        {
+            writeln("Error: ", e.msg);
+        }
+    }
 }

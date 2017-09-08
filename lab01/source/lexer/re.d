@@ -29,6 +29,28 @@ struct RegexTreeEl
     RegexTreeEl*[] children;
 }
 
+bool default_alphabet_pred(char c)
+{
+    if (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' ||
+        c >= '0' && c <= '9')
+    {
+        return true;
+    }
+    return false;
+}
+
+byte[] default_alphabet;
+
+static this()
+{
+    for (char c = 'a'; c <= 'z'; c++)
+        default_alphabet ~= cast(byte) c;
+    for (char c = 'A'; c <= 'Z'; c++)
+        default_alphabet ~= cast(byte) c;
+    for (char c = '0'; c <= '9'; c++)
+        default_alphabet ~= cast(byte) c;
+}
+
 private
 {
     static RegexTreeEl* addChild(RegexTreeEl* par, RegexTreeEl* child)

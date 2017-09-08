@@ -26,8 +26,6 @@ struct FAState
     // selects first matching transition
     FAState* move(char c)
     {
-        if (fin)
-            return null;
         foreach (t; out_transitions)
             if (t.symbol == c)
                 return t.dest;
@@ -68,11 +66,8 @@ struct FiniteAutomata
             assert(initial_state == null);
             initial_state = state;
         }
-        if (fin)
-        {
-            assert(fin_state == null);
+        if (fin && fin_state == null)
             fin_state = state;
-        }
         states ~= state;
         return state;
     }
@@ -138,10 +133,11 @@ void writeDotFile(const(FiniteAutomata)* fa, string fname = "automata.dot")
 
     foreach (state; fa.states)
     {
-        string source_name = stateName(state);
-        foreach (t; state.out_transitions)
+        string dest_name = stateName(state);
+        //foreach (t; state.out_transitions)
+        foreach (t; state.in_transitions)
         {
-            string dest_name = stateName(t.dest);
+            string source_name = stateName(t.source);
             string label = "ε";
             if (!t.epsilon)
                 label = [t.symbol];

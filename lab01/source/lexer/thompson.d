@@ -11,18 +11,8 @@ public import lab01.fa;
 public import lab01.re;
 
 
-bool default_alphabet(char c)
-{
-    if (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' ||
-        c >= '0' && c <= '9')
-    {
-        return true;
-    }
-    return false;
-}
-
 FiniteAutomata* thompsonConstruction(string regex,
-    bool function(char) alphabet_pred = &default_alphabet)
+    bool function(char) alphabet_pred = &default_alphabet_pred)
 {
     assert(regex.length);
     auto rtree = parseRegex(regex, alphabet_pred);
