@@ -79,6 +79,7 @@ FiniteAutomata* orRegexp(FiniteAutomata* left, FiniteAutomata* right)
     FAState.createTransition(start, right.initial_state, true);
     assert(left.fin_state);
     assert(right.fin_state);
+    assert(left.fin_state.out_transitions.length == 0);
     // we make right fin state shared
     foreach (Transition* t; left.fin_state.in_transitions)
     {
@@ -100,6 +101,7 @@ FiniteAutomata* concatRegexp(FiniteAutomata* first, FiniteAutomata* second)
     FiniteAutomata* fa = new FiniteAutomata();
     assert(first.fin_state);
     assert(second.fin_state);
+    assert(first.fin_state.out_transitions.length == 0);
     // change first FA final state to second one's initial
     foreach (Transition* t; first.fin_state.in_transitions)
     {
