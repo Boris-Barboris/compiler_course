@@ -136,6 +136,218 @@ void eliminateLeftRecursions(Grammar* grm)
     }
 }
 
+
+/*alias SymbolHashSet = RedBlackTree!(Symbol*,
+    (const(Symbol)* a, const(Symbol)* b) => djb2(a.repr) < djb2(b.repr), false);*/
+alias SymbolHashSet = HashSet!(Symbol*);
+
+// algorithm 2.7
+bool languageNonEmpty(Grammar* grm, out Symbol*[] ne)
+{
+    SymbolHashSet N = SymbolHashSet();
+    SymbolHashSet all = SymbolHashSet(grm.nonterminals.byValue);
+
+    Symbol* findProducer()
+    {
+        // for all nonterminals that are left unmarked
+        foreach (s; all)
+        {
+            writeln("Trying nonterm ", s.repr, " as producer");
+            // for all productions of this nonterminal
+            foreach (prod; grm.productions.filter!(a => a.input == s))
+            {
+                writeln("Trying production: ", prod.to!string);
+                assert(prod.output.length > 0);
+                /*if (prod.output.length == 1 && prod.output[0].eps)
+                {
+                    writeln("It only has empty output");
+                    continue;   // empty output
+                }*/
+                bool fits = true;
+                foreach (o; prod.output)
+                {
+                    // for each output symbol
+                    if (!(o in N) && !o.term)
+                    {
+                        writeln("This production is unfit, symbol " ~ o.repr ~
+                            " belongs to N = ", cast(bool)(o in N),
+                            " is terminal = ", o.term);
+                        fits = false;
+                        break;
+                    }
+                }
+                if (fits)
+                {
+                    // this is a good production
+                    writeln("This production fits");
+                    return s;
+                }
+            }
+        }
+        return null;
+    }
+
+    for (int i = 0; i <= grm.nonterminals.length; i++)
+    {
+        // we must find such nonterminal that in all that is capable of producing
+        // non-empty chain of terminal symbols or symbols from N;
+        writeln(i, " iteration");
+        Symbol* producer = findProducer();
+        if (producer is null)
+        {
+            writeln("unable to find producing nonterminal");
+            if (grm.axiom in N)
+            {
+                writeln("axiom is present in Ne");
+                ne = N[].array;
+                return true;
+            }
+            return false;
+        }
+        writeln("found producer ", producer.repr);
+        N.insert(producer);
+        writeln("N = ", N[].map!(a => a.repr));
+        all.remove(producer);
+        writeln("all = ", all[].map!(a => a.repr));
+    }
+    return false;
+}
+
+
+// algorithm 2.8
+Grammar* eliminateUnreachable(Grammar* grm)
+{
+    SymbolHashSet V = SymbolHashSet();
+    SymbolHashSet all = SymbolHashSet(grm.symbols.byValue);
+
+    // axiom symbol is our starting point
+    V.insert(grm.axiom);
+    all.remove(grm.axiom);
+
+    Symbol* findReachable()
+    {
+        // for all symbols that are left unmarked
+        foreach (s; all)
+        {
+            writeln("Trying symbol ", s.repr, " as reachable");
+            // for all productions of symbols that are already in V
+            foreach (prod; grm.productions.filter!(a => V.contains(a.input)))
+            {
+                writeln("Trying production: ", prod.to!string);
+                assert(prod.output.length > 0);
+                /*if (prod.output.length == 1 && prod.output[0].eps)
+                {
+                    writeln("It only has empty output");
+                    continue;   // empty output
+                }*/
+                bool fits = true;
+                if (!prod.output.canFind(s))
+                {
+                    writeln("This production is unfit, symbol " ~ s.repr ~
+                        " is not found in it's output");
+                    fits = false;
+                    continue;
+                }
+                if (fits)
+                {
+                    // this is a good production
+                    writeln("This production fits");
+                    return s;
+                }
+            }
+            writeln("symbol ", s.repr, " is unreachable on this iteration");
+        }
+        return null;
+    }
+
+    int i = 0;
+    while(true)
+    {
+        // we must find such nonterminal that in all that is capable of producing
+        // non-empty chain of terminal symbols or symbols from N;
+        writeln(i++, " iteration");
+        Symbol* reachable = findReachable();
+        if (reachable is null)
+        {
+            writeln("unable to find another reachable symbol");
+            break;
+        }
+        writeln("found reachable ", reachable.repr);
+        V.insert(reachable);
+        writeln("V = ", V[].map!(a => a.repr));
+        all.remove(reachable);
+        writeln("all = ", all[].map!(a => a.repr));
+    }
+
+    // we now need to intersect our sets with V
+    Grammar* res = new Grammar();
+    foreach (symb; V[])
+    {
+        writeln("including symbol ", symb.repr, " in new grammar");
+        res.symbols[symb.repr] = symb;
+        if (symb.term)
+            res.terminals[symb.repr] = symb;
+        else if (symb.eps)
+            res.eps = symb;
+        else
+            res.nonterminals[symb.repr] = symb;
+    }
+    foreach (prod; grm.productions)
+    {
+        if ((prod.input in V) && (prod.output.any!(a => (a in V))))
+        {
+            writeln("including production ", prod.to!string, " in new grammar");
+            res.productions ~= prod;
+        }
+    }
+    res.axiom = grm.axiom;
+
+    return res;
+}
+
+
+// remove useless symbols
+Grammar* eliminateUseless(Grammar* grm)
+{
+    Symbol*[] NE;
+    bool nonempty = languageNonEmpty(grm, NE);
+    if (!nonempty)
+        throw new Exception("empty language");
+
+    writeln("\nRemoving states that have no terminal productions...");
+    Grammar* compressed = new Grammar();
+    // copy all terminals
+    compressed.terminals = grm.terminals;
+    foreach (symb; grm.terminals)
+        compressed.symbols[symb.repr] = symb;
+    // copy some non-terminals
+    foreach (symb; NE)
+    {
+        writeln("including symbol ", symb.repr, " in compressed grammar");
+        compressed.symbols[symb.repr] = symb;
+        compressed.nonterminals[symb.repr] = symb;
+    }
+    SymbolHashSet ne = SymbolHashSet(NE);
+    foreach (prod; grm.productions)
+    {
+        if ((prod.input in ne) && (prod.output.any!(a => (a.term || a.eps || (a in ne)))))
+        {
+            writeln("including production ", prod.to!string, " in compressed grammar");
+            compressed.productions ~= prod;
+        }
+    }
+    // copy epsilon
+    compressed.eps = grm.eps;
+    compressed.symbols[grm.eps.repr] = grm.eps;
+    // copy axiom
+    compressed.axiom = grm.axiom;
+
+    writeln("\nNow removing unreachable symbols...");
+    return eliminateUnreachable(compressed);
+}
+
+
+
 void printGrammar(Grammar* grm)
 {
     writeln("nonterminals:");

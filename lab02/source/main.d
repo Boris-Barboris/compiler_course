@@ -1,3 +1,4 @@
+import std.algorithm;
 import std.stdio;
 
 import lab02.grammar;
@@ -10,5 +11,8 @@ int main(string[] args)
     writeln("recursions eliminated");
     writeln("\nResulting grammar:");
     grammar.printGrammar();
+    auto fixed = eliminateUseless(grammar);
+    writeln("\nGrammar after removed not needed symbols:");
+    fixed.printGrammar();
     return 0;
 }

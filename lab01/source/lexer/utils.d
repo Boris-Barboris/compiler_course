@@ -1,6 +1,7 @@
 module lexer.utils;
 
 import std.algorithm;
+import std.functional;
 import std.range;
 
 
@@ -107,4 +108,64 @@ int sethash(SetElTR)(SetElTR setrange)
     }
     ubyte[4] fin = hasher.finish();
     return *(cast(int*) &fin);
+}
+
+
+struct HashSet(T, alias h = "a")
+{
+    alias fun = unaryFun!(h);
+    alias HashKey = typeof(fun(T.init));
+    pragma(msg, HashKey);
+    private T[HashKey] map;
+
+    this(R)(R range)
+        if (isInputRange!R)
+    {
+        foreach (el; range)
+            insert(el);
+    }
+
+    bool insert(T v)
+    {
+        auto key = fun(v);
+        if (!(key in map))
+        {
+            map[key] = v;
+            return true;
+        }
+        return false;
+    }
+
+    bool remove(T v)
+    {
+        auto key = fun(v);
+        return map.remove(v);
+    }
+
+    const bool contains(T v)
+    {
+        auto key = fun(v);
+        return (key in map) != null;
+    }
+
+    auto opSlice()
+    {
+        return map.byValue;
+    }
+
+    const bool opBinaryRight(string op)(T v)
+        if (op == "in")
+    {
+        return this.contains(v);
+    }
+
+    auto byValue()
+    {
+        return this[];
+    }
+
+    const auto length()
+    {
+        return map.length;
+    }
 }
