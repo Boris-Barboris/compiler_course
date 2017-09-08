@@ -1,4 +1,4 @@
-module lab01.thompson;
+module lexer.thompson;
 
 import std.algorithm;
 import std.array: array;
@@ -7,8 +7,8 @@ import std.stdio;
 import std.string;
 import std.range;
 
-public import lab01.fa;
-public import lab01.re;
+public import lexer.fa;
+public import lexer.re;
 
 
 FiniteAutomata* thompsonConstruction(string regex,

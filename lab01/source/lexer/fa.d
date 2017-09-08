@@ -1,10 +1,10 @@
-module lab01.fa;
+module lexer.fa;
 
 import std.algorithm;
 import std.stdio;
 import std.range;
 
-import lab01.utils;
+import lexer.utils;
 
 
 struct FAState

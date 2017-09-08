@@ -1,4 +1,4 @@
-module lab01.utils;
+module lexer.utils;
 
 import std.algorithm;
 import std.range;
@@ -101,7 +101,10 @@ int sethash(SetElTR)(SetElTR setrange)
 {
     MurmurHash3!32 hasher;
     foreach (el; setrange)
+    {
+        static assert (el.sizeof == size_t.sizeof);
         hasher.put(*(cast(ubyte[size_t.sizeof]*) &el));
+    }
     ubyte[4] fin = hasher.finish();
     return *(cast(int*) &fin);
 }

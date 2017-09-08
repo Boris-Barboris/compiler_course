@@ -1,8 +1,7 @@
-module lab01.minimization;
+module lexer.minimization;
 
 import std.algorithm;
 import std.array: array;
-import std.digest.murmurhash;
 import std.container.rbtree;
 import std.conv: to;
 import std.stdio;
@@ -10,9 +9,9 @@ import std.string;
 import std.typecons;
 import std.range;
 
-public import lab01.fa;
-public import lab01.re;
-public import lab01.utils;
+public import lexer.fa;
+public import lexer.re;
+public import lexer.utils;
 
 
 // Myphill-Nerode theorem

@@ -1,4 +1,4 @@
-module lab01.powerset;
+module lexer.powerset;
 
 import std.algorithm;
 import std.array: array;
@@ -7,8 +7,8 @@ import std.stdio;
 import std.string;
 import std.range;
 
-public import lab01.fa;
-public import lab01.utils;
+public import lexer.fa;
+public import lexer.utils;
 
 
 // Constructs DFA from NFA, aka subset construction, aka Rabin–Scott construction

@@ -1,9 +1,9 @@
 import std.stdio;
 
-import lab01.fa;
-import lab01.thompson;
-import lab01.powerset;
-import lab01.minimization;
+import lexer.fa;
+import lexer.thompson;
+import lexer.powerset;
+import lexer.minimization;
 
 
 int main(string[] args)

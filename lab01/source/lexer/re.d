@@ -1,10 +1,10 @@
-module lab01.re;
+module lexer.re;
 
 import std.algorithm;
 import std.range;
 import std.stdio;
 
-import lab01.utils;
+import lexer.utils;
 
 
 enum ReOp: byte
