@@ -32,7 +32,7 @@ int main(string[] args)
     while (true)
     {
         writeln("Enter the string to parse:");
-        string[] input = readln().strip.split(" ");
+        string[] input = readln().strip.split;
         writeln("modeling input '", input, "'");
         try
         {

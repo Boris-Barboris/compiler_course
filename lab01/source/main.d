@@ -1,4 +1,5 @@
 import std.stdio;
+import std.string;
 
 import lexer.fa;
 import lexer.thompson;
@@ -28,11 +29,11 @@ int main(string[] args)
     while (true)
     {
         writeln("Enter the string to test:");
-        string input = readln();
+        string input = readln().strip;
         writeln("modeling input '", input, "'");
         try
         {
-            bool accepted = dfa_min.verifyAsDeterministic(input[0..$-1]);
+            bool accepted = dfa_min.verifyAsDeterministic(input);
             if (accepted)
                 writeln("string ACCEPTED by DFA");
             else

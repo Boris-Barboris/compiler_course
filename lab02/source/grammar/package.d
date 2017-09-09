@@ -527,7 +527,7 @@ Grammar* readFromFile(string filename)
 
     int nt_count = f.readln.strip.to!int;
     writeln(nt_count, " nonterminals");
-    string[] nonterms = f.readln.strip.split(" ");
+    string[] nonterms = f.readln.strip.split;
     assert(nt_count == nonterms.length);
     writeln(nonterms);
     foreach (nt; nonterms)
@@ -539,7 +539,7 @@ Grammar* readFromFile(string filename)
 
     int t_count = f.readln.strip.to!int;
     writeln(t_count, " terminals");
-    string[] terms = f.readln.strip.split(" ");
+    string[] terms = f.readln.strip.split;
     assert(t_count == terms.length);
     writeln(terms);
     foreach (t; terms)
@@ -553,7 +553,7 @@ Grammar* readFromFile(string filename)
     writeln(p_count, " productions:");
     while ((p_count--) > 0)
     {
-        string[] prod = f.readln.strip.split(" ");
+        string[] prod = f.readln.strip.split;
         string nt = prod[0];
         assert(prod[1] == "->");
         string[] output = prod[2..$];

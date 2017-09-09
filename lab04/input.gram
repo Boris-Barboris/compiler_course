@@ -1,14 +1,17 @@
-7
-Expr ArithmExpr Term Factor RelationOp AddOp MultOp
-14
-id const + - < <= = <> >= > ( ) * /
-19
+Modified grammar from lab3 without left recursion.
+
+Program -> { ExprList }
+ExprList -> Expr Tail
+Tail -> ; Expr Tail
+Tail -> __eps
 Expr -> ArithmExpr RelationOp ArithmExpr
 Expr -> ArithmExpr
-ArithmExpr -> ArithmExpr AddOp Term
+ArithmExpr' -> AddOp Term ArithmExpr'
+ArithmExpr' -> AddOp Term
+ArithmExpr -> Term ArithmExpr'
 ArithmExpr -> Term
-Term -> Term MultOp Factor
-Term -> Factor
+Term' -> MultOp Factor Term'
+Term' -> MultOp Factor
 Factor -> id
 Factor -> const
 Factor -> ( ArithmExpr )
@@ -22,4 +25,10 @@ AddOp -> +
 AddOp -> -
 MultOp -> *
 MultOp -> /
-Expr
+Term -> id Term'
+Term -> id
+Term -> const Term'
+Term -> const
+Term -> ( ArithmExpr ) Term'
+Term -> ( ArithmExpr )
+axiom: Program
