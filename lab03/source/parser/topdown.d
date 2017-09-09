@@ -15,7 +15,7 @@ import grammar;
 
 
 // top-down with rollbacks
-void parseExpression(Grammar* grm, string exp)
+void parseExpression(Grammar* grm, string[] exp)
 {
     struct NontermAlt
     {
@@ -88,7 +88,8 @@ void parseExpression(Grammar* grm, string exp)
 
     void successfulComp(Symbol* term)
     {
-        caret++;
+        if (!term.eps)
+            caret++;
         L1 ~= L1Record(term);
         assert(term == L2.back);
         L2.popBack();
@@ -114,7 +115,8 @@ void parseExpression(Grammar* grm, string exp)
             if (rec.choice == -1)
             {
                 // it's a terminal
-                caret--;
+                if (!rec.symb.eps)
+                    caret--;
                 assert(caret >= 0);
                 L1.popBack();
                 L2 ~= rec.symb;
@@ -171,10 +173,9 @@ void parseExpression(Grammar* grm, string exp)
             else
             {
                 // it's a terminal
-                assert(symb.repr.length == 1);  // fuck unicode
-                if (caret == exp.length && L2.length > 0)
+                if (caret == exp.length && L2.length > 0 && !L2.back.eps)
                     failedComp();
-                else if (exp[caret] == symb.repr[0])
+                else if (symb.eps || exp[caret] == symb.repr)
                     successfulComp(symb);
                 else
                     failedComp();

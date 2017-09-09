@@ -1,12 +1,25 @@
-3
-E T F
-5
-+ * ( ) a
-6
-E -> T + E
-E -> T
-T -> F * T
-T -> F
-F -> ( E )
-F -> a
-E
+7
+Expr ArithmExpr Term Factor RelationOp AddOp MultOp
+14
+id const + - < <= = <> >= > ( ) * /
+19
+Expr -> ArithmExpr RelationOp ArithmExpr
+Expr -> ArithmExpr
+ArithmExpr -> ArithmExpr AddOp Term
+ArithmExpr -> Term
+Term -> Term MultOp Factor
+Term -> Factor
+Factor -> id
+Factor -> const
+Factor -> ( ArithmExpr )
+RelationOp -> <
+RelationOp -> <=
+RelationOp -> =
+RelationOp -> <>
+RelationOp -> >=
+RelationOp -> >
+AddOp -> +
+AddOp -> -
+MultOp -> *
+MultOp -> /
+Expr

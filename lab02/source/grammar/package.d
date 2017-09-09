@@ -416,7 +416,7 @@ Grammar* readFromFile(string filename)
         string[] output = prod[2..$];
         Production* p;
         if (output.length > 0)
-             p = new Production(res.nonterminals[nt], output.map!(a => res.symbols[a]).array);
+            p = new Production(res.nonterminals[nt], output.map!(a => res.symbols[a]).array);
         else
             p = new Production(res.nonterminals[nt], [res.eps]);
         writeln(p.to!string);
