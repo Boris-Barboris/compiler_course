@@ -1,7 +1,7 @@
 import std.algorithm;
 import std.stdio;
 
-import lab02.grammar;
+import grammar;
 
 
 int main(string[] args)

@@ -1,4 +1,4 @@
-module lab02.grammar;
+module grammar;
 
 import std.algorithm;
 import std.array: array;

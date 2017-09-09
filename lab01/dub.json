@@ -1,4 +1,14 @@
 {
 	"name": "lab01",
     "targetType": "executable",
+    "configurations": [
+        {
+            "name": "exec",
+            "targetType": "executable"
+        },
+        {
+            "name": "lib",
+            "targetType": "library"
+        }
+    ],
 }

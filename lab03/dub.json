@@ -1,10 +1,10 @@
 {
-	"name": "lab02",
-    "targetType": "executable",
+    "name": "lab03",
     "dependencies": {
         "lab01": { "path": "../lab01/" },
+        "lab02": { "path": "../lab02/" },
     },
-	"configurations": [
+    "configurations": [
         {
             "name": "exec",
             "targetType": "executable"
@@ -14,7 +14,8 @@
             "targetType": "library"
         }
     ],
-	"subConfigurations": {
+    "subConfigurations": {
         "lab01": "lib",
+        "lab02": "lib",
     }
 }
