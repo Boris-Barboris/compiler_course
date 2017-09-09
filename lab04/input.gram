@@ -1,0 +1,25 @@
+7
+Expr ArithmExpr Term Factor RelationOp AddOp MultOp
+14
+id const + - < <= = <> >= > ( ) * /
+19
+Expr -> ArithmExpr RelationOp ArithmExpr
+Expr -> ArithmExpr
+ArithmExpr -> ArithmExpr AddOp Term
+ArithmExpr -> Term
+Term -> Term MultOp Factor
+Term -> Factor
+Factor -> id
+Factor -> const
+Factor -> ( ArithmExpr )
+RelationOp -> <
+RelationOp -> <=
+RelationOp -> =
+RelationOp -> <>
+RelationOp -> >=
+RelationOp -> >
+AddOp -> +
+AddOp -> -
+MultOp -> *
+MultOp -> /
+Expr

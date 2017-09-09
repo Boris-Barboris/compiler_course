@@ -21,12 +21,17 @@ pure ulong djb2(string str) @safe
     return hash;
 }
 
+enum: byte
+{
+    NONTERM = 0,
+    TERM = 1,
+    EPS = 2,
+}
+
 struct Symbol
 {
-    bool term;      // true when this is terminal symbol
+    byte type;
     string repr;    // unique representation
-    bool eps;       // is this an empty terminal?
-    //bool nullable;  // wheter this symbol can be
 }
 
 struct Production
@@ -36,10 +41,20 @@ struct Production
 
     this(Symbol* i, Symbol*[] o)
     {
-        assert(!i.term);    // context-free grammar
+        assert(i.type == NONTERM);    // context-free grammar
         input = i;
         output = o;
     }
+}
+
+string to(T: string)(const(Production)* prod)
+{
+    return prod.input.repr ~ " -> " ~ prod.output.map!(a => a.repr).join(" ");
+}
+
+string to(T: string)(const(Production) prod)
+{
+    return prod.input.repr ~ " -> " ~ prod.output.map!(a => a.repr).join(" ");
 }
 
 //alias SymbolSet = RedBlackTree!(Symbol*, (Symbol* a, Symbol* b) => djb2(a.repr) < djb2(b.repr), false);
@@ -101,7 +116,8 @@ void eliminateLeftRecursions(Grammar* grm)
             continue;   // no recursions for Ai
         writeln("recustions found in productions of ", nonterms[i].repr);
         string new_repr = nonterms[i].repr ~ '\'';
-        assert(!(new_repr in grm.symbols));
+        while (new_repr in grm.symbols)
+            new_repr ~= '\'';
         Symbol* new_nonterm = new Symbol(false, new_repr);
         grm.nonterminals[new_repr] = new_nonterm;
         grm.symbols[new_repr] = new_nonterm;
@@ -126,7 +142,7 @@ void eliminateLeftRecursions(Grammar* grm)
                 // prod is production of type Ai -> "b". We add new production
                 // Ai -> "b A'i"
                 writeln("replacing: ", prod.to!string);
-                prod.output = (prod.output ~ new_nonterm).filter!(a => !a.eps).array;
+                prod.output = (prod.output ~ new_nonterm).filter!(a => a.type != EPS).array;
                 writeln("with: ", prod.to!string);
             }
         }
@@ -167,11 +183,9 @@ bool languageNonEmpty(Grammar* grm, out Symbol*[] ne)
                 foreach (o; prod.output)
                 {
                     // for each output symbol
-                    if (!(o in N) && !o.term)
+                    if (!(o in N) && (o.type == NONTERM))
                     {
-                        writeln("This production is unfit, symbol " ~ o.repr ~
-                            " belongs to N = ", cast(bool)(o in N),
-                            " is terminal = ", o.term);
+                        writeln("This production is unfit");
                         fits = false;
                         break;
                     }
@@ -263,8 +277,6 @@ Grammar* eliminateUnreachable(Grammar* grm)
     int i = 0;
     while(true)
     {
-        // we must find such nonterminal that in all that is capable of producing
-        // non-empty chain of terminal symbols or symbols from N;
         writeln(i++, " iteration");
         Symbol* reachable = findReachable();
         if (reachable is null)
@@ -285,11 +297,9 @@ Grammar* eliminateUnreachable(Grammar* grm)
     {
         writeln("including symbol ", symb.repr, " in new grammar");
         res.symbols[symb.repr] = symb;
-        if (symb.term)
+        if (symb.type == TERM)
             res.terminals[symb.repr] = symb;
-        else if (symb.eps)
-            res.eps = symb;
-        else
+        else if (symb.type == NONTERM)
             res.nonterminals[symb.repr] = symb;
     }
     foreach (prod; grm.productions)
@@ -301,7 +311,144 @@ Grammar* eliminateUnreachable(Grammar* grm)
         }
     }
     res.axiom = grm.axiom;
+    res.eps = grm.eps;
+    res.symbols[grm.eps.repr] = res.eps;
+    return res;
+}
 
+
+// algorithm 2.10
+Grammar* eliminateEpsProductions(Grammar* grm)
+{
+    SymbolHashSet Ne = SymbolHashSet();
+    SymbolHashSet all = SymbolHashSet(grm.nonterminals.byValue);
+
+    Symbol* findEpsProducer()
+    {
+        // for all nonterminals that are left unmarked
+        foreach (s; all)
+        {
+            writeln("Trying nonterm ", s.repr, " as epsilon-producer");
+            // for all productions of this nonterminal
+            foreach (prod; grm.productions.filter!(a => a.input == s))
+            {
+                writeln("Trying production: ", prod.to!string);
+                assert(prod.output.length > 0);
+                /*if (prod.output.length == 1 && prod.output[0].eps)
+                {
+                    writeln("It only has empty output");
+                    continue;   // empty output
+                }*/
+                /*if (prod.output.length == 1 && prod.output[0].eps)
+                {
+                    writeln("This production is epsilon-producing");
+                    return s;
+                }*/
+                /*if (prod.output.length == 1 && prod.output[0].type == EPS)
+                {
+                    writeln("trivial epsilon production");
+                    return s;
+                }*/
+                bool passes = true;
+                foreach (o; prod.output)
+                {
+                    // for each output symbol
+                    if (!(o in Ne) && (o.type != EPS))
+                    {
+                        writeln("This production is not nullable");
+                        passes = false;
+                        break;
+                    }
+                }
+                if (passes)
+                {
+                    writeln("Production is nullable");
+                    return s;
+                }
+            }
+        }
+        return null;
+    }
+
+    for (int i = 0; i <= grm.nonterminals.length; i++)
+    {
+        writeln(i, " iteration");
+        Symbol* producer = findEpsProducer();
+        if (producer is null)
+        {
+            writeln("unable to find more epsilon-producing nonterminals");
+            break;
+        }
+        writeln("found epsilon-producer ", producer.repr);
+        Ne.insert(producer);
+        writeln("Ne = ", Ne[].map!(a => a.repr));
+        all.remove(producer);
+        writeln("all = ", all[].map!(a => a.repr));
+    }
+
+    // we now have Ne set of all nonterminals that can produce epsilon
+    if (Ne.length == 0)
+    {
+        writeln("No epsilon-productions were found");
+        return grm;
+    }
+
+    Production*[] new_productions;   // new productions
+
+    // recursive chain binary expansion
+    void rAddProductions(Symbol* input, Symbol*[] output, int idx = 0)
+    {
+        if (idx == output.length)
+        {
+            if (output.length > 0 && output[0].type != EPS)
+            {
+                Production* newprod = new Production(input, output.dup);
+                writeln("adding new production ", newprod.to!string);
+                new_productions ~= newprod;
+            }
+            else
+                writeln("excluding production ", to!string(Production(input, output)));
+        }
+        else
+        {
+            Symbol* symb = output[idx];
+            if (symb in Ne)
+            {
+                writeln("symbol ", symb.repr, " is in Ne");
+                rAddProductions(input, output, idx + 1);
+                output = output.remove(idx);
+                rAddProductions(input, output, idx);
+            }
+            else
+                rAddProductions(input, output, idx + 1);
+        }
+    }
+
+    foreach (prod; grm.productions)
+    {
+        writeln("mutating production ", prod.to!string);
+        Symbol*[] toutput = prod.output.dup;
+        rAddProductions(prod.input, toutput);    // generate new productions
+    }
+
+    Symbol*[string] new_nonterms = grm.nonterminals.dup;
+    Symbol*[string] new_terminals = grm.terminals.dup;
+    Symbol*[string] new_symbols = grm.symbols.dup;
+
+    Symbol* new_axiom = grm.axiom;
+    if (grm.axiom in Ne)
+    {
+        writeln("Axiom nonterminal has epsilon production");
+        new_axiom = new Symbol(NONTERM, grm.axiom.repr ~ "'");
+        new_nonterms[new_axiom.repr] = new_axiom;
+        new_symbols[new_axiom.repr] = new_axiom;
+        new_productions ~= new Production(new_axiom, [grm.eps]);
+        new_productions ~= new Production(new_axiom, [grm.axiom]);
+    }
+
+    // we now simply build grammar
+    Grammar* res = new Grammar(new_nonterms, new_terminals, new_symbols,
+        new_axiom, grm.eps, new_productions);
     return res;
 }
 
@@ -317,20 +464,21 @@ Grammar* eliminateUseless(Grammar* grm)
     writeln("\nRemoving states that have no terminal productions...");
     Grammar* compressed = new Grammar();
     // copy all terminals
-    compressed.terminals = grm.terminals;
+    compressed.terminals = grm.terminals.dup;
     foreach (symb; grm.terminals)
         compressed.symbols[symb.repr] = symb;
     // copy some non-terminals
     foreach (symb; NE)
     {
         writeln("including symbol ", symb.repr, " in compressed grammar");
+        assert(symb.type == NONTERM);
         compressed.symbols[symb.repr] = symb;
         compressed.nonterminals[symb.repr] = symb;
     }
     SymbolHashSet ne = SymbolHashSet(NE);
     foreach (prod; grm.productions)
     {
-        if ((prod.input in ne) && (prod.output.any!(a => (a.term || a.eps || (a in ne)))))
+        if ((prod.input in ne) && (prod.output.any!(a => (a.type != NONTERM || (a in ne)))))
         {
             writeln("including production ", prod.to!string, " in compressed grammar");
             compressed.productions ~= prod;
@@ -369,15 +517,10 @@ void printGrammar(Grammar* grm)
     writeln("axiom: ", grm.axiom.repr);
 }
 
-string to(T: string)(const(Production)* prod)
-{
-    return prod.input.repr ~ " -> " ~ prod.output.map!(a => a.repr).join(" ");
-}
-
 Grammar* readFromFile(string filename)
 {
     Grammar* res = new Grammar();
-    res.eps = new Symbol(true, "__eps", true);
+    res.eps = new Symbol(EPS, "__eps");
     res.symbols["__eps"] = res.eps;
     auto f = File(filename, "r");
     scope(exit) f.close();
@@ -389,7 +532,7 @@ Grammar* readFromFile(string filename)
     writeln(nonterms);
     foreach (nt; nonterms)
     {
-        auto s = new Symbol(false, nt);
+        auto s = new Symbol(NONTERM, nt);
         res.nonterminals.add(s);
         res.symbols.add(s);
     }
@@ -401,7 +544,7 @@ Grammar* readFromFile(string filename)
     writeln(terms);
     foreach (t; terms)
     {
-        auto s = new Symbol(true, t);
+        auto s = new Symbol(TERM, t);
         res.terminals.add(s);
         res.symbols.add(s);
     }

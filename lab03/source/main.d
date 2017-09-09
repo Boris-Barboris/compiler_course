@@ -9,11 +9,26 @@ import grammar;
 int main(string[] args)
 {
     auto grammar = readFromFile("input.gram");
-    writeln("removing recursions and compressing it...");
+
+    writeln("\nremoving left recursion");
     grammar.eliminateLeftRecursions();
+    writeln("\nGrammar without left recursions:");
+    grammar.printGrammar();
+
+    writeln("\nremoving epsilon productions...");
+    grammar = eliminateEpsProductions(grammar);
+    writeln("\nGrammar without epsilon productions:");
+    grammar.printGrammar();
+
+    /*
+    writeln("\nremoving useless symbols...");
     grammar = eliminateUseless(grammar);
+    writeln("\nGrammar without useless:");
+    grammar.printGrammar();*/
+
     writeln("\nResulting grammar:");
     grammar.printGrammar();
+
     while (true)
     {
         writeln("Enter the string to parse:");

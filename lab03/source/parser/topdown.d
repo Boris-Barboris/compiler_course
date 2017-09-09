@@ -78,7 +78,7 @@ void parseExpression(Grammar* grm, string[] exp)
     void expandTree(int alt)
     {
         Symbol* nt = L2.back;
-        assert(!nt.term);
+        assert(nt.type == NONTERM);
         L2.popBack;
         auto prod = alts[nt].alternatives[alt];
         foreach (s; prod.output.retro)
@@ -88,7 +88,7 @@ void parseExpression(Grammar* grm, string[] exp)
 
     void successfulComp(Symbol* term)
     {
-        if (!term.eps)
+        if (term.type != EPS)
             caret++;
         L1 ~= L1Record(term);
         assert(term == L2.back);
@@ -115,7 +115,7 @@ void parseExpression(Grammar* grm, string[] exp)
             if (rec.choice == -1)
             {
                 // it's a terminal
-                if (!rec.symb.eps)
+                if (rec.symb.type == TERM)
                     caret--;
                 assert(caret >= 0);
                 L1.popBack();
@@ -140,8 +140,7 @@ void parseExpression(Grammar* grm, string[] exp)
         if (rec.choice >= alts[rec.symb].alternatives.length)
         {
             // we have exhausted all our alternatives
-            assert(L2.length > 0);
-            if (L2.length == 1)
+            if (L1.length == 0)
                 throw new Exception("rolling back from axiom, parsing error");
         }
         else
@@ -161,21 +160,29 @@ void parseExpression(Grammar* grm, string[] exp)
         {
             if (L2.empty)
             {
-                terminationOk();
-                break;
+                if (caret == exp.length)
+                {
+                    terminationOk();
+                    break;
+                }
+                else
+                {
+                    failedComp();
+                    continue;
+                }
             }
             auto symb = L2.back;
-            if (!symb.term)
+            if (symb.type == NONTERM)
             {
                 // it's a non-terminal
                 expandTree(0);  // start from it's first expansion
             }
             else
             {
-                // it's a terminal
-                if (caret == exp.length && L2.length > 0 && !L2.back.eps)
+                // maybe it's a tail epsilon
+                if (caret == exp.length && L2.length > 0 && symb.type != EPS)
                     failedComp();
-                else if (symb.eps || exp[caret] == symb.repr)
+                else if (symb.type == EPS || exp[caret] == symb.repr)
                     successfulComp(symb);
                 else
                     failedComp();
