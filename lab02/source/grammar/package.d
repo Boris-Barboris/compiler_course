@@ -304,7 +304,7 @@ Grammar* eliminateUnreachable(Grammar* grm)
     }
     foreach (prod; grm.productions)
     {
-        if ((prod.input in V) && (prod.output.any!(a => (a in V))))
+        if ((prod.input in V) && (prod.output.all!(a => (a in V))))
         {
             writeln("including production ", prod.to!string, " in new grammar");
             res.productions ~= prod;
