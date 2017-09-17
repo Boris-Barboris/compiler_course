@@ -1,0 +1,19 @@
+{
+    "name": "rk1",
+    "dependencies": {
+        "lab01": { "path": "../lab01/" },
+    },
+    "configurations": [
+        {
+            "name": "exec",
+            "targetType": "executable"
+        },
+        {
+            "name": "lib",
+            "targetType": "library"
+        }
+    ],
+    "subConfigurations": {
+        "lab01": "lib",
+    }
+}
