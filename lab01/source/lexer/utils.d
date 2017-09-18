@@ -136,16 +136,35 @@ struct HashSet(T, alias h = "a")
         return false;
     }
 
-    bool remove(T v)
+    int unionn(R)(R r)
+        if (isForwardRange!R)
+    {
+        int cter = 0;
+        foreach (v; r)
+            if (insert(v))
+                cter++;
+        return cter;
+    }
+
+    bool remove(const T v)
     {
         auto key = fun(v);
         return map.remove(v);
     }
 
-    const bool contains(T v)
+    const bool contains(const T v)
     {
         auto key = fun(v);
         return (key in map) != null;
+    }
+
+    const bool contains(R)(R r)
+        if (isForwardRange!R)
+    {
+        foreach (v; r)
+            if (!contains(v))
+                return false;
+        return true;
     }
 
     auto opSlice()
@@ -167,5 +186,11 @@ struct HashSet(T, alias h = "a")
     const auto length()
     {
         return map.length;
+    }
+
+    const bool opEquals(const HashSet rhs)
+    {
+        return (rhs.contains(this.map.byValue) &&
+            this.contains(rhs.map.byValue));
     }
 }

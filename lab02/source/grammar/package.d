@@ -52,6 +52,11 @@ string to(T: string)(const(Production)* prod)
     return prod.input.repr ~ " -> " ~ prod.output.map!(a => a.repr).join(" ");
 }
 
+string toString(const(Production)* prod)
+{
+    return prod.to!string;
+}
+
 string to(T: string)(const(Production) prod)
 {
     return prod.input.repr ~ " -> " ~ prod.output.map!(a => a.repr).join(" ");
@@ -74,6 +79,17 @@ struct Grammar
     Symbol* axiom;
     Symbol* eps;
     Production*[] productions;
+}
+
+void addSymbol(Grammar* grm, Symbol* s)
+{
+    grm.symbols.add(s);
+    if (s.type == NONTERM)
+        grm.nonterminals.add(s);
+    else if (s.type == TERM)
+        grm.terminals.add(s);
+    else if (s.type == EPS)
+        grm.eps = s;
 }
 
 
